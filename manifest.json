@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Canalist",
+  "version": "0.4.1",
+  "description": "Play unwatched uploads from your YouTube channels in a single queue.",
+  "minimum_chrome_version": "123",
+  "permissions": ["sidePanel", "storage"],
+  "host_permissions": ["https://www.youtube.com/*", "https://www.googleapis.com/*"],
+  "icons": { "16": "icon16.png", "32": "icon32.png", "48": "icon48.png", "128": "icon128.png" },
+  "action": {
+    "default_title": "Canalist",
+    "default_icon": { "16": "icon16.png", "24": "icon24.png", "32": "icon32.png" }
+  },
+  "side_panel": { "default_path": "panel.html" },
+  "background": { "service_worker": "background.mjs", "type": "module" },
+  "content_scripts": [{
+    "matches": ["https://www.youtube.com/*"],
+    "js": ["playback.js"],
+    "run_at": "document_start"
+  }]
+}
