@@ -94,8 +94,14 @@ label { display: block; font-weight: 550; }
   gap: .35rem;
   margin: .65rem 0;
 }
-.media-control { display: grid; place-items: center; padding: .35rem; line-height: 1; }
-.media-control > span { display: block; font: 1.15rem/1 "Segoe UI Symbol", sans-serif; }
+.media-control { display: grid; place-items: center; min-height: 2.5rem; padding: .35rem; line-height: 1; }
+.media-control > span {
+  display: grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  font: 1.15rem/1 "Segoe UI Symbol", sans-serif;
+}
 input, button, select {
   font: inherit;
   color: inherit;
@@ -106,6 +112,7 @@ input, button, select {
 }
 button { cursor: pointer; min-height: 2.15rem; }
 button:hover:not(:disabled):not(.primary) { background: var(--tint); }
+button.primary:hover:not(:disabled) { filter: brightness(1.08); }
 button:disabled { cursor: default; opacity: .55; }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 650; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -128,16 +135,19 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
   display: grid;
   grid-template-columns: 2ch minmax(3.5rem, 28%) minmax(0, 1fr) auto;
   align-items: center;
-  gap: .4rem;
+  gap: .5rem;
   text-align: left;
   width: 100%;
+  padding: .4rem .45rem;
   border-color: transparent;
 }
 .video-row:hover, .video-row[aria-current="true"] {
   border-color: var(--border);
   background: var(--tint);
 }
+.video-row:focus-visible { outline-offset: -2px; }
 .video-row[aria-current="true"] { border-inline-start: .2rem solid var(--accent); }
+.video-row[aria-current="true"] .video-title { font-weight: 650; }
 .video-number { font-size: .78rem; color: var(--muted); }
 .video-thumb {
   display: block;
@@ -148,10 +158,11 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
   background: var(--tint);
 }
 .video-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.video-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
-.video-label { display: block; color: var(--muted); font-size: .78rem; }
+.video-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; }
+.video-label { display: block; margin-top: .12rem; color: var(--muted); font-size: .76rem; line-height: 1.2; }
 .video-status { display: flex; gap: .2rem; align-items: center; color: var(--accent); }
 .status-icon { font-size: .85rem; line-height: 1; }
+.status-icon[data-status="watched"] { color: var(--muted); }
 .queue-pages { align-items: center; justify-content: space-between; color: var(--muted); }
 
 @media (min-height: 520px) {

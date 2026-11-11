@@ -249,6 +249,7 @@ function videoRow(id, index, isCurrent, watched) {
     if (!visible) continue;
     const icon = document.createElement("span");
     icon.className = "status-icon";
+    icon.dataset.status = symbol === "✓" ? "watched" : "current";
     icon.textContent = symbol;
     icon.setAttribute("aria-hidden", "true");
     status.append(icon);
