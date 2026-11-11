@@ -31,10 +31,18 @@
         <p id="queue-status" role="status"></p>
       </div>
       <div class="transport">
-        <button id="previous" type="button" class="media-control" aria-label="Vídeo anterior" data-en-label="Previous video" title="Vídeo anterior"><span aria-hidden="true">⏮</span></button>
-        <button id="resume" class="primary media-control" type="button" aria-label="Abrir vídeo" data-en-label="Open video" title="Abrir vídeo"><span id="play-icon" aria-hidden="true">▶</span></button>
-        <button id="skip" type="button" class="media-control" aria-label="Próximo e marcar como assistido" data-en-label="Next and mark as watched" title="Próximo e marcar como assistido"><span aria-hidden="true">⏭</span></button>
-        <button id="stop" type="button" class="media-control" aria-label="Encerrar fila" data-en-label="End queue" title="Encerrar fila"><span aria-hidden="true">⏹</span></button>
+        <div class="sort-control">
+          <button id="queue-sort-toggle" type="button" class="media-control" aria-label="Reordenar fila" data-en-label="Reorder queue" title="Reordenar fila" aria-expanded="false" aria-controls="queue-sort-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v2H3zm0 5h7v2H3zm0 5h4v2H3zM17 11l3 3 3-3h-2V4h-2v7z"/></svg></button>
+          <div id="queue-sort-menu" class="sort-menu" role="group" aria-label="Ordenar fila" data-en-label="Sort queue" hidden>
+            <button type="button" class="sort-option" data-order="newest" aria-pressed="false" data-en="Newest first">Mais recentes primeiro</button>
+            <button type="button" class="sort-option" data-order="oldest" aria-pressed="false" data-en="Oldest first">Mais antigos primeiro</button>
+            <button type="button" class="sort-option" data-order="views" aria-pressed="false" data-en="Most viewed">Mais assistidos</button>
+          </div>
+        </div>
+        <button id="previous" type="button" class="media-control" aria-label="Vídeo anterior" data-en-label="Previous video" title="Vídeo anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14L8 12zM6 5h2v14H6z"/></svg></button>
+        <button id="resume" class="primary media-control" type="button" aria-label="Abrir vídeo" data-en-label="Open video" title="Abrir vídeo"><svg id="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+        <button id="skip" type="button" class="media-control" aria-label="Próximo e marcar como assistido" data-en-label="Next and mark as watched" title="Próximo e marcar como assistido"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14l10-7zM18 5h2v14h-2z"/></svg></button>
+        <button id="stop" type="button" class="media-control" aria-label="Encerrar fila" data-en-label="End queue" title="Encerrar fila"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg></button>
       </div>
       <ol id="queue-items" aria-label="Vídeos da fila" data-en-label="Queued videos"></ol>
       <div id="queue-pages" class="row queue-pages" hidden>
@@ -57,7 +65,16 @@
         <select id="recent-channels" aria-label="Canais recentes" data-en-label="Recent channels" hidden></select>
         <ul id="selected-channels" aria-label="Canais selecionados" data-en-label="Selected channels" hidden></ul>
         <div class="row filters">
-          <label><span data-en="Published since">Publicado desde</span> <input id="since" type="date"></label>
+          <label><span data-en="Published">Publicado</span>
+            <select id="period" aria-label="Período de publicação" data-en-label="Publication period">
+              <option value="7days" data-en="Last 7 days" selected>Últimos 7 dias</option>
+              <option value="30days" data-en="Last 30 days">Últimos 30 dias</option>
+              <option value="month" data-en="This month">Este mês</option>
+              <option value="all" data-en="All time">Sempre</option>
+              <option value="custom" data-en="Custom period">Período personalizado</option>
+            </select>
+          </label>
+          <label id="custom-since" hidden><span data-en="Start date">Desde</span> <input id="since" type="date"></label>
           <label><span data-en="Sort by">Ordem</span>
             <select id="order">
               <option value="newest" data-en="Newest first">Mais recentes primeiro</option>

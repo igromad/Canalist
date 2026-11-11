@@ -3,9 +3,13 @@ import { defaultSince, fetchChannels, fetchVideoDetails, fetchViewCounts, parseC
 const byId = (id) => document.getElementById(id);
 const channel = byId("channel");
 const recentChannels = byId("recent-channels");
+const period = byId("period");
+const customSince = byId("custom-since");
 const since = byId("since");
 since.value = defaultSince();
 const order = byId("order");
+const queueSortMenu = byId("queue-sort-menu");
+let queueOrder = "newest";
 const search = byId("search");
 const apiKey = byId("api-key");
 const trackOutside = byId("track-outside");
@@ -36,6 +40,40 @@ function tr(portuguese, english) {
   return language.value === "en" ? english : portuguese;
 }
 
+function localDateValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function publicationCutoff() {
+  if (period.value === "all") return "";
+  if (period.value === "custom") {
+    if (!since.value) throw new Error("Escolha uma data de início válida.");
+    return since.value;
+  }
+
+  const today = new Date();
+  const start = period.value === "month" ?
+    new Date(today.getFullYear(), today.getMonth(), 1) :
+    new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (period.value === "7days") start.setDate(start.getDate() - 6);
+  if (period.value === "30days") start.setDate(start.getDate() - 29);
+  return localDateValue(start);
+}
+
+function updatePeriodControl() {
+  const isCustom = period.value === "custom";
+  customSince.hidden = !isCustom;
+  since.required = isCustom;
+}
+
+const playbackIconPaths = {
+  play: "M8 5v14l11-7z",
+  pause: "M6 5h4v14H6z M14 5h4v14h-4z"
+};
+
 const englishErrors = new Map([
   ["Não foi possível conectar à API do YouTube.", "Could not connect to the YouTube API."],
   ["Limite de consultas da API do YouTube atingido. Tente mais tarde.", "YouTube API quota reached. Try again later."],
@@ -46,6 +84,7 @@ const englishErrors = new Map([
   ["O YouTube repetiu uma página de uploads. Tente atualizar a consulta.", "YouTube returned the same page of uploads twice. Try searching again."],
   ["Abra o próximo vídeo pelo botão Abrir vídeo.", "Use Open video to open the next video."],
   ["Nenhum vídeo pendente para reproduzir.", "There are no unwatched videos to play."],
+  ["A fila avançou durante a ordenação. Tente novamente.", "The queue advanced while sorting. Try again."],
   ["Não foi possível iniciar o vídeo. Use o player do YouTube.", "Could not start the video. Use the YouTube player."],
   ["Não foi possível controlar o vídeo. Atualize a aba do YouTube.", "Could not control the video. Refresh the YouTube tab."]
 ]);
@@ -145,7 +184,7 @@ async function offerResume() {
   const check = ++resumeCheck;
   const { queue } = library;
   const card = byId("resume-card");
-  if (!queue?.ids[queue.index] || dismissedQueue === queue.token) {
+  if (queueBusy || !queue?.ids[queue.index] || dismissedQueue === queue.token) {
     card.hidden = true;
     return;
   }
@@ -186,6 +225,37 @@ async function loadQueueDetails(ids) {
     renderQueue();
   } catch {
     // The queue can still navigate using video IDs if the metadata request fails.
+  }
+}
+
+async function reorderQueue() {
+  const queue = library.queue;
+  if (!queue || queueBusy) return;
+  const current = queue.ids[queue.index];
+  const eligible = queue.ids.filter((id) => id !== current && !library.watched.includes(id));
+  const needsViews = queueOrder === "views";
+  const missing = eligible.filter((id) => {
+    const video = details.get(id);
+    return !video || !Number.isFinite(video.published) || (needsViews && !Number.isFinite(video.views));
+  });
+  try {
+    if (missing.length) {
+      const { key } = await chrome.storage.local.get("key");
+      if (!key) throw new Error(tr("Configure a chave da API para ordenar a fila.", "Set an API key to sort the queue."));
+      feedback("queue-feedback", tr("Carregando dados para reordenar…", "Loading data to reorder the queue…"));
+      for (let offset = 0; offset < missing.length; offset += 50) {
+        const batch = missing.slice(offset, offset + 50);
+        for (const video of await fetchVideoDetails(batch, key)) {
+          const existing = details.get(video.id);
+          details.set(video.id, { ...video, published: video.published ?? existing?.published, views: video.views ?? existing?.views });
+        }
+      }
+    }
+    const rest = selectVideos(eligible.map((id) => details.get(id) ?? { id, published: 0 }), [], queueOrder);
+    const ids = [...(!library.watched.includes(current) ? [current] : []), ...rest.map(({ id }) => id)];
+    await queueAction({ type: "reorder", token: queue.token, currentId: current, ids });
+  } catch (error) {
+    feedback("queue-feedback", errorText(error), true);
   }
 }
 
@@ -249,7 +319,6 @@ function videoRow(id, index, isCurrent, watched) {
     if (!visible) continue;
     const icon = document.createElement("span");
     icon.className = "status-icon";
-    icon.dataset.status = symbol === "✓" ? "watched" : "current";
     icon.textContent = symbol;
     icon.setAttribute("aria-hidden", "true");
     status.append(icon);
@@ -290,11 +359,18 @@ function renderQueue() {
   byId("previous").disabled = queueBusy || queue.index === 0;
   for (const id of ["resume", "skip"]) byId(id).disabled = queueBusy || !current;
   byId("stop").disabled = queueBusy;
+  byId("queue-sort-toggle").disabled = queueBusy || !current;
+  for (const option of queueSortMenu.querySelectorAll("button")) {
+    option.disabled = queueBusy;
+    option.setAttribute("aria-pressed", String(option.dataset.order === queueOrder));
+  }
   const label = playbackState === "playing" ? tr("Pausar vídeo", "Pause video") :
     playbackState === "paused" ? tr("Continuar vídeo", "Play video") : tr("Abrir vídeo", "Open video");
   byId("resume").setAttribute("aria-label", label);
   byId("resume").title = label;
-  byId("play-icon").textContent = playbackState === "playing" ? "⏸" : "▶";
+  byId("play-icon").firstElementChild.setAttribute(
+    "d", playbackIconPaths[playbackState === "playing" ? "pause" : "play"]
+  );
 
   const start = queuePage * queuePageSize;
   const ids = queue.ids.slice(start, start + queuePageSize);
@@ -381,6 +457,7 @@ async function queueAction(message) {
   } finally {
     queueBusy = false;
     render();
+    void offerResume();
   }
 }
 
@@ -428,13 +505,13 @@ byId("catalog-form").addEventListener("submit", async (event) => {
     return;
   }
   const request = new AbortController();
-  const searchSince = since.value;
   clearSearch();
   activeSearch = request;
   search.disabled = true;
   order.disabled = true;
   feedback("search-status", tr("Consultando o YouTube…", "Searching YouTube…"));
   try {
+    const searchSince = publicationCutoff();
     const { key } = await chrome.storage.local.get("key");
     if (!key) {
       byId("settings").open = true;
@@ -529,6 +606,10 @@ chrome.tabs.onUpdated.addListener((id, change) => {
     void refreshPlayback();
   }
 });
+period.addEventListener("change", () => {
+  updatePeriodControl();
+  clearSearch();
+});
 since.addEventListener("input", clearSearch);
 order.addEventListener("change", renderResults);
 byId("use-tab").addEventListener("click", async () => {
@@ -564,6 +645,33 @@ for (const type of ["skip", "stop"]) {
 }
 byId("previous").addEventListener("click", () => {
   if (library.queue) jumpTo(library.queue.index - 1);
+});
+byId("queue-sort-toggle").addEventListener("click", () => {
+  queueSortMenu.hidden = !queueSortMenu.hidden;
+  byId("queue-sort-toggle").setAttribute("aria-expanded", String(!queueSortMenu.hidden));
+  if (!queueSortMenu.hidden) queueSortMenu.querySelector(`[data-order="${queueOrder}"]`)?.focus();
+});
+queueSortMenu.addEventListener("click", (event) => {
+  const option = event.target.closest("[data-order]");
+  if (!option || queueBusy) return;
+  queueOrder = option.dataset.order;
+  queueSortMenu.hidden = true;
+  byId("queue-sort-toggle").setAttribute("aria-expanded", "false");
+  renderQueue();
+  void reorderQueue();
+});
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".sort-control")) {
+    queueSortMenu.hidden = true;
+    byId("queue-sort-toggle").setAttribute("aria-expanded", "false");
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !queueSortMenu.hidden) {
+    queueSortMenu.hidden = true;
+    byId("queue-sort-toggle").setAttribute("aria-expanded", "false");
+    byId("queue-sort-toggle").focus();
+  }
 });
 for (const [id, step] of [["list-back", -1], ["list-forward", 1]]) {
   byId(id).addEventListener("click", () => {
@@ -649,6 +757,7 @@ language.addEventListener("change", async () => {
 });
 
 try {
+  updatePeriodControl();
   const saved = await chrome.storage.local.get(["library", "key", "trackOutsideQueue", "recentChannels", "lastChannels", "language"]);
   applyLanguage(saved.language);
   if (saved.library) library = saved.library;

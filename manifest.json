@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Canalist",
-  "version": "0.4.1",
+  "version": "0.4.4",
   "description": "Play unwatched uploads from your YouTube channels in a single queue.",
   "minimum_chrome_version": "123",
   "permissions": ["sidePanel", "storage"],

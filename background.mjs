@@ -67,9 +67,12 @@ async function handle(message, sender) {
       if (!current) return false;
       if (queue.session !== await sessionId()) return true;
       const tab = await chrome.tabs.get(queue.tabId).catch(() => null);
-      if (!tab?.url) return true;
+      if (!tab) return true;
+      if (tab.status === "loading" && !tab.pendingUrl) return false;
+      const targetUrl = tab.pendingUrl || tab.url;
+      if (!targetUrl) return true;
       try {
-        const url = new URL(tab.url);
+        const url = new URL(targetUrl);
         return url.origin !== youtubeOrigin || url.pathname !== "/watch" ||
           url.searchParams.get("v") !== current;
       } catch {
@@ -117,6 +120,21 @@ async function handle(message, sender) {
       if (!ids.length) throw new Error("Nenhum vídeo pendente para reproduzir.");
       state.queue = { ids, index: 0, token: crypto.randomUUID(), tabId: null };
       await openQueueItem(state.queue, { reuse: true });
+      await save();
+      return;
+    }
+    case "reorder": {
+      if (!queue || message.token !== queue.token || !Array.isArray(message.ids)) return;
+      if (queue.ids[queue.index] !== message.currentId) {
+        throw new Error("A fila avançou durante a ordenação. Tente novamente.");
+      }
+      const allowed = new Set(queue.ids);
+      const ids = [...new Set(message.ids)].filter((id) => isVideoId(id) && allowed.has(id) && !watched.has(id));
+      if (!ids.length) throw new Error("Nenhum vídeo pendente para reproduzir.");
+      queue.ids = ids;
+      queue.index = 0;
+      delete queue.progress;
+      await openQueueItem(queue, { reuse: true });
       await save();
       return;
     }

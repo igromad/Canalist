@@ -28,7 +28,7 @@ body { margin: 0 auto; max-width: 43rem; padding: .85rem; }
   width: 2.45rem;
   height: 2.2rem;
   border-radius: .65rem;
-  background: #ff0000;
+  background: var(--accent);
   flex: none;
 }
 h1, h2, p { margin: 0; }
@@ -90,18 +90,28 @@ label { display: block; font-weight: 550; }
 #queue-status { color: var(--muted); font-size: .86rem; }
 .transport {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: .35rem;
   margin: .65rem 0;
 }
 .media-control { display: grid; place-items: center; min-height: 2.5rem; padding: .35rem; line-height: 1; }
-.media-control > span {
-  display: grid;
-  place-items: center;
-  width: 1.45rem;
-  height: 1.45rem;
-  font: 1.15rem/1 "Segoe UI Symbol", sans-serif;
+.media-control > svg { display: block; width: 1.25rem; height: 1.25rem; fill: currentColor; }
+.sort-control { position: relative; min-width: 0; }
+.sort-control > button { width: 100%; }
+.sort-menu {
+  position: absolute;
+  z-index: 5;
+  inset-block-start: calc(100% + .35rem);
+  inset-inline-start: 0;
+  width: min(13rem, calc(100vw - 2rem));
+  padding: .25rem;
+  border: 1px solid var(--border);
+  border-radius: .6rem;
+  background: var(--surface);
+  box-shadow: 0 .35rem 1rem #0004;
 }
+.sort-option { display: block; width: 100%; border: 0; text-align: start; white-space: nowrap; }
+.sort-option[aria-pressed="true"] { color: var(--accent); font-weight: 650; }
 input, button, select {
   font: inherit;
   color: inherit;
@@ -162,7 +172,6 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .video-label { display: block; margin-top: .12rem; color: var(--muted); font-size: .76rem; line-height: 1.2; }
 .video-status { display: flex; gap: .2rem; align-items: center; color: var(--accent); }
 .status-icon { font-size: .85rem; line-height: 1; }
-.status-icon[data-status="watched"] { color: var(--muted); }
 .queue-pages { align-items: center; justify-content: space-between; color: var(--muted); }
 
 @media (min-height: 520px) {
