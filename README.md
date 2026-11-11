@@ -1,39 +1,38 @@
 # Canalist
 
-Extensão para Vivaldi, Chrome e Edge que monta uma fila de uploads pendentes e abre cada vídeo no player normal do YouTube.
+A browser extension for Vivaldi, Chrome, and Edge that builds a queue of unwatched channel uploads and plays each video in YouTube's regular player.
 
-## Instalação local
+## Local installation
 
-1. Se recebeu o ZIP, extraia a pasta.
-2. Abra `vivaldi://extensions` no Vivaldi, `chrome://extensions` no Chrome ou `edge://extensions` no Edge.
-3. Ative **Modo do desenvolvedor**, clique em **Carregar sem compactação** e selecione a pasta que contém `manifest.json`.
-4. No [Google Cloud Console](https://console.cloud.google.com/apis/library/youtube.googleapis.com), ative **YouTube Data API v3** em um projeto. Em **APIs e serviços → Credenciais**, crie uma chave de API e restrinja a chave à YouTube Data API v3.
-5. Clique no ícone da extensão. Em **Configuração da API**, cole a chave e clique em **Salvar**. A chave fica no armazenamento local do perfil e é enviada ao Google nas consultas. Use uma chave própria para esta instalação local.
+1. If you received a ZIP file, extract it.
+2. Open `vivaldi://extensions` in Vivaldi, `chrome://extensions` in Chrome, or `edge://extensions` in Edge.
+3. Enable **Developer mode**, click **Load unpacked**, and select the folder containing `manifest.json`.
+4. In the [Google Cloud Console](https://console.cloud.google.com/apis/library/youtube.googleapis.com), enable **YouTube Data API v3** in a project. Under **APIs & Services → Credentials**, create an API key and restrict it to YouTube Data API v3.
+5. Click the extension icon. Under **API settings**, paste the key and click **Save**. The key is stored in your browser profile and sent to Google with requests. Use your own key for this local installation.
 
-## Uso
+## Usage
 
-1. Cole um `@handle`, uma URL de canal ou o link da [playlist de uploads do GameTrailers](https://www.youtube.com/playlist?list=UUJx5KP-pCUmL9eZUv-mIcNw). **Usar aba** copia o endereço do canal ou da playlist que estiver aberto. O campo vem preenchido com o último canal pesquisado com sucesso. Use **Canais recentes** para escolher um dos últimos 10.
-2. Em **Publicado desde**, o padrão cobre os últimos sete dias do calendário, incluindo hoje. Você pode alterar a data ou limpar o campo para consultar todos os uploads. O corte começa à meia-noite da data escolhida, no fuso local. Escolha a ordem e clique em **Criar fila**.
-3. A fila aparece no painel com títulos, miniaturas e destaque para o vídeo selecionado. Clique em qualquer item para abri-lo na mesma aba de reprodução. O botão de próximo marca o vídeo atual como assistido antes de avançar. As setas abaixo da lista mostram mais vídeos.
-4. Quando um vídeo termina na aba de reprodução, a extensão grava o ID e abre o seguinte. Se o navegador exigir um clique para iniciar a reprodução, use o botão do player. Se fechar a aba ou reiniciar o navegador, **Abrir vídeo** reabre o item atual. **Encerrar fila** limpa a seleção sem apagar o histórico.
-5. A opção **Registrar também vídeos concluídos fora da fila** conta sessões em páginas normais `/watch` do YouTube no mesmo perfil. Ela vem desativada. Após instalar ou recarregar a extensão, recarregue as abas do YouTube que já estavam abertas para ativar o registro nelas.
+1. Enter a channel `@handle`, a channel URL, or an [uploads playlist URL](https://www.youtube.com/playlist?list=UUJx5KP-pCUmL9eZUv-mIcNw). **Use current tab** copies the address of the channel or playlist currently open. The field is prefilled with the last successfully searched channel. Use **Recent channels** to choose from the last 10.
+2. **Published since** defaults to the last seven calendar days, including today. Change the date or clear the field to include all uploads. The cutoff starts at midnight on the selected date in your local time zone. Choose a sort order and click **Create queue**.
+3. The queue appears in the panel with titles, thumbnails, and a highlight on the selected video. Click any item to open it in the same playback tab. The next button marks the current video as watched before advancing. Use the arrows below the list to browse more videos.
+4. When a video ends in the playback tab, the extension records its ID and opens the next video. If the browser requires a click to start playback, use the player button. If you close the tab or restart the browser, **Open video** reopens the current item. **End queue** clears the selection without deleting your history.
+5. **Also track videos completed outside the queue** records viewing sessions on regular YouTube `/watch` pages in the same profile. It is off by default. After installing or reloading the extension, refresh YouTube tabs that were already open to enable tracking on them.
 
-## Arquivo de assistidos
+## Watched videos file
 
-**Exportar TXT** baixa `assistidos.txt` com um ID por linha. **Importar TXT** combina os IDs com o histórico local e aceita linhas no formato do arquivo de downloads do Stacher/yt-dlp, como `youtube dQw4w9WgXcQ`. Cada ID importado fica excluído das filas futuras. O arquivo original fica intacto. Para desfazer uma conclusão recente, use **Desfazer última marcação** e gere a fila novamente.
+**Export TXT** downloads `watched.txt` with one video ID per line. **Import TXT** merges IDs into your local history and accepts lines in the Stacher/yt-dlp downloads format, such as `youtube dQw4w9WgXcQ`. Imported IDs are excluded from future queues. The original file is left unchanged. To undo a recent completion, use **Undo last mark** and create the queue again.
 
-## Uso do painel
+## Panel features
 
-- No cabeçalho, escolha **PT-BR** ou **English**. A extensão inicia em inglês e guarda a preferência neste perfil.
+- Choose **PT-BR** or **English** in the header. The extension starts in English and saves the preference in this browser profile.
+- Use **Add** or **Recent channels** to select multiple channels. **Create queue** combines their results and applies the same date and sort order to all of them. The panel remembers your last selection.
+- When you return after closing the queue tab or navigating to another video, choose **Resume queue** or **Build a new queue**. The extension saves the position while a video plays and when it is paused. If the tab was closed, it reopens the video near the saved position. The previous queue remains available until you start another one or click **End queue**.
+- Open **Local history** to import or export IDs. Under **API settings → How to create an API key**, you will find step-by-step instructions with links to Google Cloud.
 
-- Use **Adicionar** ou **Canais recentes** para selecionar vários canais. **Criar fila** combina os resultados em uma fila e aplica a mesma data e ordem ao conjunto. O painel lembra a última seleção.
-- Ao voltar depois de fechar a aba da fila ou navegar para outro vídeo, escolha **Continuar fila** ou **Montar nova fila**. A extensão registra a posição enquanto o vídeo toca e ao pausar. Se a aba foi fechada, ela reabre o vídeo perto do ponto salvo. A fila anterior fica disponível até você iniciar outra ou clicar em **Encerrar fila**.
-- Abra **Histórico local** para importar ou exportar IDs. Em **Configuração da API → Como criar uma chave de API**, você encontra o passo a passo com links para o Google Cloud.
+## Scope and limitations
 
-## Escopo
-
-- O histórico fica no perfil do navegador. Use o TXT para transferi-lo para outra instalação. O histórico anterior da conta do YouTube começa a contar nesta extensão quando você importa ou marca os IDs.
-- A fila é mantida pela extensão e roda em `youtube.com/watch`. Ela fica neste navegador até você substituí-la ou encerrá-la. Os títulos e miniaturas vêm da API do YouTube e são consultados novamente ao reabrir o painel.
-- A detecção automática depende da estrutura do player do YouTube. Se um vídeo estiver indisponível ou o player não sinalizar a conclusão, use os botões da fila. O registro automático cobre páginas `/watch`; a interface vertical de Shorts fica fora deste escopo.
-- **Criar fila** consulta a playlist em páginas de até 50 e só conta vídeos dentro do período. Com uma data preenchida, a busca encerra após duas páginas seguidas com vídeos datados, todos anteriores ao corte. Um vídeo fora da ordem cronológica que apareça depois desse ponto pode ficar fora do resultado. Para consultar toda a playlist, limpe o campo de data.
-- **Mais assistidos** ordena a seleção pelo total público de visualizações no YouTube, do maior para o menor. Empates priorizam os vídeos mais recentes.
+- History is stored in the browser profile. Use the TXT file to transfer it to another installation. Your existing YouTube account watch history is not imported automatically; import IDs or mark videos in this extension to add them.
+- The extension manages the queue and plays it on `youtube.com/watch`. It stays in this browser until replaced or ended. Titles and thumbnails come from the YouTube API and are fetched again when you reopen the panel.
+- Automatic detection depends on YouTube's player structure. If a video is unavailable or the player does not signal completion, use the queue controls. Automatic tracking covers `/watch` pages; the vertical Shorts interface is outside the current scope.
+- **Create queue** reads the uploads playlist in pages of up to 50 and only counts videos within the selected date range. When a date is set, the search stops after two consecutive pages of dated videos that are all older than the cutoff. An out-of-order video appearing later in the playlist may therefore be missed. Clear the date to scan the entire playlist.
+- **Most viewed** sorts selected videos by public YouTube view count, highest first. Ties are sorted by newest first.
