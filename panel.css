@@ -33,10 +33,12 @@ body { margin: 0 auto; max-width: 43rem; padding: .85rem; }
 }
 h1, h2, p { margin: 0; }
 h1 { font-size: 1.42rem; line-height: 1.15; letter-spacing: -.03em; }
+.brand-name { min-width: 0; }
+.brand-name p { color: var(--muted); font-size: .75rem; line-height: 1.2; }
 #language { flex: none; margin-inline-start: auto; }
 @media (max-width: 290px) {
   .masthead { flex-wrap: wrap; }
-  .masthead h1 { flex: 1; }
+  .masthead .brand-name { flex: 1; }
 }
 h2 { font-size: 1.1rem; margin-bottom: .65rem; }
 .hint, .feedback { color: var(--muted); }

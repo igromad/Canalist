@@ -1,4 +1,4 @@
-# Canalist
+# Canalist: Binge Your Channels
 
 Canalist builds a queue from one or more YouTube channels and keeps track of watched videos locally. The queue plays in YouTube's standard video player.
 

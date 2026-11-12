@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Canalist",
+  "name": "Canalist: Binge Your Channels",
   "version": "0.4.7",
   "description": "Play unwatched uploads from your YouTube channels in a single queue.",
   "minimum_chrome_version": "123",
@@ -8,7 +8,7 @@
   "host_permissions": ["https://www.youtube.com/*", "https://www.googleapis.com/*"],
   "icons": { "16": "icon16.png", "32": "icon32.png", "48": "icon48.png", "128": "icon128.png" },
   "action": {
-    "default_title": "Canalist",
+    "default_title": "Canalist: Binge Your Channels",
     "default_icon": { "16": "icon16.png", "24": "icon24.png", "32": "icon32.png" }
   },
   "side_panel": { "default_path": "panel.html" },
