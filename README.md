@@ -17,7 +17,7 @@ Canalist builds a queue from one or more YouTube channels and keeps track of wat
 3. Choose a sort order and click **Create queue**. Available orders include newest, oldest, and most viewed.
 4. Select a video from the list or use the playback controls. The next control marks the current video as watched before advancing.
 
-The extension opens videos in YouTube. When a video finishes, Canalist records its ID and advances to the next item. Use the sort icon beside the playback controls to reorder a queue that is already running; the current video stays first, and watched videos are removed. If you return to an interrupted queue, you can resume it or build a new one. Playback position is saved when the video is paused or playing.
+The extension opens videos in YouTube. When a video finishes, Canalist records its ID and advances to the next item. Use the sort icon beside the playback controls to reorder a queue that is already running; the current video stays first, and watched videos are removed. The refresh button repeats the queue's saved channel, date, and sort settings, adds newly uploaded videos, removes watched ones, reports both counts, and leaves the current video playing without interruption. If you return to an interrupted queue, you can resume it or build a new one. Playback position is saved when the video is paused or playing.
 
 ## Watched video history
 

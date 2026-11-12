@@ -118,7 +118,19 @@ async function handle(message, sender) {
     case "start": {
       const ids = [...new Set(message.ids)].filter((id) => isVideoId(id) && !watched.has(id));
       if (!ids.length) throw new Error("Nenhum vídeo pendente para reproduzir.");
-      state.queue = { ids, index: 0, token: crypto.randomUUID(), tabId: null };
+      const periods = new Set(["7days", "30days", "month", "all", "custom"]);
+      const sorts = new Set(["newest", "oldest", "views"]);
+      state.queue = {
+        ids,
+        index: 0,
+        token: crypto.randomUUID(),
+        tabId: null,
+        sources: Array.isArray(message.sources) ? message.sources : [],
+        period: periods.has(message.period) ? message.period : "7days",
+        customSince: typeof message.customSince === "string" ? message.customSince : "",
+        sort: sorts.has(message.sort) ? message.sort : "newest",
+        revision: 0
+      };
       await openQueueItem(state.queue, { reuse: true });
       await save();
       return;
@@ -133,10 +145,35 @@ async function handle(message, sender) {
       if (!ids.length) throw new Error("Nenhum vídeo pendente para reproduzir.");
       queue.ids = ids;
       queue.index = 0;
+      if (["newest", "oldest", "views"].includes(message.sort)) queue.sort = message.sort;
+      queue.revision = (queue.revision ?? 0) + 1;
       delete queue.progress;
       await openQueueItem(queue, { reuse: true });
       await save();
       return;
+    }
+    case "refresh": {
+      if (!queue || message.token !== queue.token || !Array.isArray(message.ids)) return;
+      if (queue.ids[queue.index] !== message.currentId) {
+        throw new Error("A fila avançou durante a atualização. Tente novamente.");
+      }
+      const previousIds = queue.ids;
+      const previousSet = new Set(previousIds);
+      const removedWatched = previousIds.filter((id) => watched.has(id) && id !== message.currentId).length;
+      const ids = [...new Set(message.ids)].filter((id) => isVideoId(id) && (!watched.has(id) || id === message.currentId));
+      const added = ids.filter((id) => !previousSet.has(id)).length;
+      queue.ids = ids;
+      queue.index = 0;
+      if (["newest", "oldest", "views"].includes(message.sort)) queue.sort = message.sort;
+      queue.revision = (queue.revision ?? 0) + 1;
+      if (!message.currentId) delete queue.progress;
+      if (!ids.length) {
+        await save();
+        return { added, removedWatched };
+      }
+      if (!message.currentId) await openQueueItem(queue, { reuse: true });
+      await save();
+      return { added, removedWatched };
     }
     case "resume":
       if (!current || message.token !== queue.token) return;

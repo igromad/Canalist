@@ -63,7 +63,12 @@ label { display: block; font-weight: 550; }
 #resume-card {
   border-inline-start: .25rem solid var(--accent);
   background: var(--tint);
+  padding: .55rem .65rem;
 }
+#resume-card h2 { margin: 0; font-size: .95rem; line-height: 1.25; }
+#resume-description { color: var(--muted); font-size: .8rem; line-height: 1.3; }
+#resume-card .actions { margin-top: .4rem; gap: .35rem; }
+#resume-card .actions button { min-height: 2rem; padding: .3rem .5rem; font-size: .85rem; }
 #selected-channels {
   display: flex;
   flex-wrap: wrap;
@@ -72,25 +77,36 @@ label { display: block; font-weight: 550; }
   margin: .55rem 0 0;
   list-style: none;
 }
-.channel-input { flex-wrap: wrap; }
-.channel-input > input { min-width: min(8rem, 100%); }
+.channel-input { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: stretch; margin-top: .3rem; }
+.channel-input > input { min-width: 0; width: 100%; }
+.channel-input > button { display: inline-flex; align-items: center; justify-content: center; gap: .3rem; white-space: nowrap; min-height: 2.5rem; }
+.channel-input > button svg { width: 1.1rem; height: 1.1rem; fill: currentColor; flex: none; }
+#catalog-form > label, .filters > label { color: var(--muted); font-size: .85rem; }
+#catalog-form input, #catalog-form select { min-height: 2.5rem; color: light-dark(#171717, #f1f1f1); }
+#catalog-form select, #catalog-form input { font-size: 1rem; }
+#catalog-form > label { display: block; }
+#recent-channels { min-height: 2.5rem; }
+@media (max-width: 380px) {
+  .channel-input { grid-template-columns: 1fr 1fr; }
+  .channel-input > input { grid-column: 1 / -1; }
+}
 .channel-chip {
   border-radius: 1rem;
   background: var(--tint);
   overflow-wrap: anywhere;
   text-align: left;
 }
-.filters { flex-wrap: wrap; margin-top: .55rem; }
-.filters > label { min-width: 8rem; }
-.filters input, .filters select { display: block; width: 100%; margin-top: .15rem; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); align-items: end; gap: .55rem; margin-top: .8rem; }
+.filters > label { min-width: 0; }
+.filters input, .filters select { display: block; width: 100%; margin-top: .3rem; }
 .actions { flex-wrap: wrap; margin-top: .65rem; }
-.catalog-actions > button { flex: 1 1 auto; }
+.catalog-actions > button { flex: 1 1 auto; min-height: 2.5rem; }
 .queue-heading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: .3rem .7rem; }
 .queue-heading h2 { margin: 0; }
 #queue-status { color: var(--muted); font-size: .86rem; }
 .transport {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: .35rem;
   margin: .65rem 0;
 }
@@ -172,31 +188,69 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .video-label { display: block; margin-top: .12rem; color: var(--muted); font-size: .76rem; line-height: 1.2; }
 .video-status { display: flex; gap: .2rem; align-items: center; color: var(--accent); }
 .status-icon { font-size: .85rem; line-height: 1; }
-.queue-pages { align-items: center; justify-content: space-between; color: var(--muted); }
+.queue-pages { align-items: center; justify-content: center; gap: .5rem; margin-top: .45rem; color: var(--muted); }
+.queue-page-info { flex: 1; text-align: center; font-size: .8rem; line-height: 1.2; }
+.queue-pages > button { min-height: 1.7rem; padding: .1rem .5rem; }
 
 @media (min-height: 520px) {
-  body:has(#queue-card:not([hidden])):not(:has(#catalog-panel[open], #history[open], #settings[open])) {
+  body:has(#queue-card:not([hidden])) {
     height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
-  body:has(#queue-card:not([hidden])):not(:has(#catalog-panel[open], #history[open], #settings[open])) main {
+  body:has(#queue-card:not([hidden])) main {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
   }
-  body:has(#queue-card:not([hidden])):not(:has(#catalog-panel[open], #history[open], #settings[open])) #queue-card {
+  body:has(#queue-card:not([hidden])) #queue-card {
     display: flex;
     flex-direction: column;
     flex: 1;
     min-height: 0;
   }
-  body:has(#queue-card:not([hidden])):not(:has(#catalog-panel[open], #history[open], #settings[open])) #queue-items {
+  body:has(#queue-card:not([hidden])) #queue-items {
     flex: 1;
     min-height: 0;
     max-height: none;
     align-content: start;
+  }
+  body:has(#queue-card:not([hidden])) #catalog-panel {
+    flex: none;
+  }
+  body:has(#queue-card:not([hidden])) #catalog-panel[open] .catalog-content {
+    max-height: min(65dvh, 32rem);
+    overflow-y: auto;
+  }
+  body:has(#queue-card:not([hidden])) .preferences {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  body:has(#queue-card:not([hidden])) .preferences > details[open] .disclosure-body {
+    max-height: min(45dvh, 24rem);
+    overflow-y: auto;
+  }
+  body:has(#queue-card:not([hidden])) #settings[open] > .disclosure-body {
+    max-height: none;
+    overflow: visible;
+  }
+  body:has(#queue-card:not([hidden])):has(#catalog-panel[open]):has(#history[open]):has(#settings[open] .setup-guide[open]) #queue-card {
+    flex: none;
+  }
+  body:has(#queue-card:not([hidden])):has(#catalog-panel[open]):has(#history[open]):has(#settings[open] .setup-guide[open]) #queue-items,
+  body:has(#queue-card:not([hidden])):has(#catalog-panel[open]):has(#history[open]):has(#settings[open] .setup-guide[open]) #queue-pages {
+    display: none;
+  }
+  body:has(#queue-card:not([hidden])):has(#catalog-panel[open]):has(#history[open]):has(#settings[open] .setup-guide[open]) #catalog-panel[open] .catalog-content {
+    max-height: 25dvh;
+  }
+  body:has(#queue-card:not([hidden])):has(#catalog-panel[open]):has(#history[open]):has(#settings[open] .setup-guide[open]) .preferences {
+    flex: 1 1 0;
+  }
+  body:has(#queue-card:not([hidden])):has(#catalog-panel[open]):has(#history[open]):has(#settings[open] .setup-guide[open]) #history[open] .disclosure-body {
+    max-height: 20dvh;
   }
 }

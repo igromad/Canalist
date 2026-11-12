@@ -47,19 +47,19 @@ function localDateValue(date) {
   return `${year}-${month}-${day}`;
 }
 
-function publicationCutoff() {
-  if (period.value === "all") return "";
-  if (period.value === "custom") {
-    if (!since.value) throw new Error("Escolha uma data de início válida.");
-    return since.value;
+function publicationCutoff(selectedPeriod = period.value, customDate = since.value) {
+  if (selectedPeriod === "all") return "";
+  if (selectedPeriod === "custom") {
+    if (!customDate) throw new Error("Escolha uma data de início válida.");
+    return customDate;
   }
 
   const today = new Date();
-  const start = period.value === "month" ?
+  const start = selectedPeriod === "month" ?
     new Date(today.getFullYear(), today.getMonth(), 1) :
     new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  if (period.value === "7days") start.setDate(start.getDate() - 6);
-  if (period.value === "30days") start.setDate(start.getDate() - 29);
+  if (selectedPeriod === "7days") start.setDate(start.getDate() - 6);
+  if (selectedPeriod === "30days") start.setDate(start.getDate() - 29);
   return localDateValue(start);
 }
 
@@ -85,6 +85,7 @@ const englishErrors = new Map([
   ["Abra o próximo vídeo pelo botão Abrir vídeo.", "Use Open video to open the next video."],
   ["Nenhum vídeo pendente para reproduzir.", "There are no unwatched videos to play."],
   ["A fila avançou durante a ordenação. Tente novamente.", "The queue advanced while sorting. Try again."],
+  ["A fila avançou durante a atualização. Tente novamente.", "The queue advanced while refreshing. Try again."],
   ["Não foi possível iniciar o vídeo. Use o player do YouTube.", "Could not start the video. Use the YouTube player."],
   ["Não foi possível controlar o vídeo. Atualize a aba do YouTube.", "Could not control the video. Refresh the YouTube tab."]
 ]);
@@ -253,9 +254,88 @@ async function reorderQueue() {
     }
     const rest = selectVideos(eligible.map((id) => details.get(id) ?? { id, published: 0 }), [], queueOrder);
     const ids = [...(!library.watched.includes(current) ? [current] : []), ...rest.map(({ id }) => id)];
-    await queueAction({ type: "reorder", token: queue.token, currentId: current, ids });
+    await queueAction({ type: "reorder", token: queue.token, currentId: current, ids, sort: queueOrder });
   } catch (error) {
     feedback("queue-feedback", errorText(error), true);
+  }
+}
+
+async function refreshQueue() {
+  const original = library.queue;
+  if (!original || queueBusy || activeSearch) return;
+  if (!original.sources?.length) {
+    feedback("queue-feedback", tr(
+      "Esta fila é anterior ao registro dos filtros. Crie uma nova fila para habilitar a atualização.",
+      "This queue predates saved filters. Create a new queue to enable refresh."
+    ), true);
+    return;
+  }
+
+  const request = new AbortController();
+  activeSearch = request;
+  queueBusy = true;
+  renderQueue();
+  feedback("queue-feedback", tr("Atualizando vídeos dos canais…", "Refreshing channel uploads…"));
+  try {
+    const { key } = await chrome.storage.local.get("key");
+    if (!key) {
+      byId("settings").open = true;
+      apiKey.focus();
+      const message = tr("Salve uma chave da API antes de atualizar a fila.",
+        "Save an API key before refreshing the queue.");
+      feedback("key-feedback", message, true);
+      throw new Error(message);
+    }
+    const cutoff = publicationCutoff(original.period ?? "7days", original.customSince ?? "");
+    const sorting = original.sort ?? "newest";
+    const { videos } = await fetchChannels(original.sources, key, {
+      since: cutoff,
+      signal: request.signal,
+      onProgress: (index, count) => {
+        if (activeSearch === request) feedback("queue-feedback", tr(
+          `Canal ${index} de ${original.sources.length} · ${count} vídeos no período`,
+          `Channel ${index} of ${original.sources.length} · ${count} videos in this period`
+        ));
+      }
+    });
+    if (activeSearch !== request) return;
+    if (sorting === "views" && videos.length) {
+      feedback("queue-feedback", tr("Consultando visualizações…", "Loading view counts…"));
+      const counts = await fetchViewCounts(videos.map(({ id }) => id), key, request.signal);
+      if (activeSearch !== request) return;
+      for (const video of videos) video.views = counts.get(video.id);
+    }
+    for (const video of videos) details.set(video.id, video);
+
+    const currentQueue = library.queue;
+    if (!currentQueue || currentQueue.token !== original.token) return;
+    const currentId = currentQueue.ids[currentQueue.index];
+    const pendingVideos = selectVideos(videos, library.watched, sorting);
+    const ids = [
+      ...(currentId ? [currentId] : []),
+      ...pendingVideos.filter(({ id }) => id !== currentId).map(({ id }) => id)
+    ];
+    if (!ids.length) {
+      const result = await queueAction({ type: "refresh", token: currentQueue.token, currentId, ids: [], sort: sorting });
+      if (result) feedback("queue-feedback", tr(
+        `Adicionados: ${result.added} novos · Removidos por já assistidos: ${result.removedWatched}`,
+        `Added: ${result.added} new · Removed as watched: ${result.removedWatched}`
+      ));
+      return;
+    }
+    const result = await queueAction({
+      type: "refresh", token: currentQueue.token, currentId, ids, sort: sorting
+    });
+    if (result) feedback("queue-feedback", tr(
+      `Adicionados: ${result.added} novos · Removidos por já assistidos: ${result.removedWatched}`,
+      `Added: ${result.added} new · Removed as watched: ${result.removedWatched}`
+    ));
+  } catch (error) {
+    if (activeSearch === request) feedback("queue-feedback", errorText(error), true);
+  } finally {
+    if (activeSearch === request) activeSearch = null;
+    queueBusy = false;
+    renderQueue();
   }
 }
 
@@ -347,18 +427,19 @@ function renderQueue() {
   }
   const list = byId("queue-items");
   const current = queue.ids[queue.index];
-  const cursor = `${queue.token}:${queue.index}`;
+  const cursor = `${queue.token}:${queue.index}:${queue.revision ?? 0}`;
   const cursorChanged = cursor !== queueCursor;
   if (cursorChanged) {
     queueCursor = cursor;
-    queuePage = Math.floor(Math.min(queue.index, queue.ids.length - 1) / queuePageSize);
+    queuePage = queue.ids.length ? Math.floor(Math.min(queue.index, queue.ids.length - 1) / queuePageSize) : 0;
   }
   byId("queue-status").textContent = current ?
-    tr(`Vídeo ${queue.index + 1} de ${queue.ids.length}`, `Video ${queue.index + 1} of ${queue.ids.length}`) :
+    `${queue.index + 1} / ${queue.ids.length}` :
     tr("Fim da fila.", "End of queue.");
   byId("previous").disabled = queueBusy || queue.index === 0;
   for (const id of ["resume", "skip"]) byId(id).disabled = queueBusy || !current;
   byId("stop").disabled = queueBusy;
+  byId("refresh-queue").disabled = queueBusy;
   byId("queue-sort-toggle").disabled = queueBusy || !current;
   for (const option of queueSortMenu.querySelectorAll("button")) {
     option.disabled = queueBusy;
@@ -382,10 +463,13 @@ function renderQueue() {
     const row = list.querySelector('[aria-current="true"]')?.parentElement;
     list.scrollTop = Math.max(0, (row?.offsetTop ?? 0) - list.clientHeight / 3);
   }
-  byId("queue-pages").hidden = queue.ids.length <= queuePageSize;
+  const pages = Math.max(1, Math.ceil(queue.ids.length / queuePageSize));
+  byId("queue-pages").hidden = pages === 1;
+  byId("list-back").hidden = pages === 1;
+  byId("list-forward").hidden = pages === 1;
   byId("list-range").textContent = tr(
-    `${start + 1}–${start + ids.length} de ${queue.ids.length}`,
-    `${start + 1}–${start + ids.length} of ${queue.ids.length}`
+    `Página ${queuePage + 1} de ${pages}`,
+    `Page ${queuePage + 1} of ${pages}`
   );
   byId("list-back").disabled = queueBusy || queuePage === 0;
   byId("list-forward").disabled = queueBusy || start + ids.length >= queue.ids.length;
@@ -449,8 +533,8 @@ async function queueAction(message) {
   render();
   feedback("queue-feedback", "");
   try {
-    await send(message);
-    return true;
+    const result = await send(message);
+    return message.type === "refresh" ? result : true;
   } catch (error) {
     feedback("queue-feedback", errorText(error), true);
     return false;
@@ -483,7 +567,9 @@ chrome.storage.onChanged.addListener((changes, area) => {
     const previous = library.queue;
     library = changes.library.newValue ?? { watched: [], queue: null, lastMarked: null };
     const current = library.queue;
-    const cursorChanged = previous?.token !== current?.token || previous?.index !== current?.index;
+    if (["newest", "oldest", "views"].includes(current?.sort)) queueOrder = current.sort;
+    const cursorChanged = previous?.token !== current?.token || previous?.index !== current?.index ||
+      previous?.revision !== current?.revision;
     if (cursorChanged || changes.library.oldValue?.watched?.length !== library.watched.length ||
         changes.library.oldValue?.lastMarked !== library.lastMarked) render();
     if (cursorChanged || previous?.progress?.paused !== current?.progress?.paused) {
@@ -516,8 +602,10 @@ byId("catalog-form").addEventListener("submit", async (event) => {
     if (!key) {
       byId("settings").open = true;
       apiKey.focus();
-      throw new Error(tr("Salve uma chave da API antes de buscar uploads.",
-        "Save an API key before searching for uploads."));
+      const message = tr("Salve uma chave da API antes de buscar uploads.",
+        "Save an API key before searching for uploads.");
+      feedback("key-feedback", message, true);
+      throw new Error(message);
     }
     const { channels: used, videos } = await fetchChannels(entries, key, {
       since: searchSince,
@@ -560,7 +648,15 @@ byId("catalog-form").addEventListener("submit", async (event) => {
       feedback("search-status", tr("Nenhum vídeo pendente neste período.", "No unwatched videos in this period."));
       return;
     }
-    await queueAction({ type: "start", ids });
+    queueOrder = order.value;
+    await queueAction({
+      type: "start",
+      ids,
+      sources: used,
+      period: period.value,
+      customSince: period.value === "custom" ? since.value : "",
+      sort: order.value
+    });
   } catch (error) {
     if (activeSearch === request) feedback("search-status", errorText(error), true);
   } finally {
@@ -646,6 +742,7 @@ for (const type of ["skip", "stop"]) {
 byId("previous").addEventListener("click", () => {
   if (library.queue) jumpTo(library.queue.index - 1);
 });
+byId("refresh-queue").addEventListener("click", () => void refreshQueue());
 byId("queue-sort-toggle").addEventListener("click", () => {
   queueSortMenu.hidden = !queueSortMenu.hidden;
   byId("queue-sort-toggle").setAttribute("aria-expanded", String(!queueSortMenu.hidden));
@@ -761,6 +858,7 @@ try {
   const saved = await chrome.storage.local.get(["library", "key", "trackOutsideQueue", "recentChannels", "lastChannels", "language"]);
   applyLanguage(saved.language);
   if (saved.library) library = saved.library;
+  if (["newest", "oldest", "views"].includes(library.queue?.sort)) queueOrder = library.queue.sort;
   apiKey.value = saved.key ?? "";
   byId("api-recommended").hidden = !!saved.key;
   trackOutside.checked = !!saved.trackOutsideQueue;

@@ -34,8 +34,8 @@
         <div class="sort-control">
           <button id="queue-sort-toggle" type="button" class="media-control" aria-label="Reordenar fila" data-en-label="Reorder queue" title="Reordenar fila" aria-expanded="false" aria-controls="queue-sort-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v2H3zm0 5h7v2H3zm0 5h4v2H3zM17 11l3 3 3-3h-2V4h-2v7z"/></svg></button>
           <div id="queue-sort-menu" class="sort-menu" role="group" aria-label="Ordenar fila" data-en-label="Sort queue" hidden>
-            <button type="button" class="sort-option" data-order="newest" aria-pressed="false" data-en="Newest first">Mais recentes primeiro</button>
-            <button type="button" class="sort-option" data-order="oldest" aria-pressed="false" data-en="Oldest first">Mais antigos primeiro</button>
+            <button type="button" class="sort-option" data-order="newest" aria-pressed="false" data-en="Newest first">Mais recentes</button>
+            <button type="button" class="sort-option" data-order="oldest" aria-pressed="false" data-en="Oldest first">Mais antigos</button>
             <button type="button" class="sort-option" data-order="views" aria-pressed="false" data-en="Most viewed">Mais assistidos</button>
           </div>
         </div>
@@ -43,11 +43,12 @@
         <button id="resume" class="primary media-control" type="button" aria-label="Abrir vídeo" data-en-label="Open video" title="Abrir vídeo"><svg id="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
         <button id="skip" type="button" class="media-control" aria-label="Próximo e marcar como assistido" data-en-label="Next and mark as watched" title="Próximo e marcar como assistido"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14l10-7zM18 5h2v14h-2z"/></svg></button>
         <button id="stop" type="button" class="media-control" aria-label="Encerrar fila" data-en-label="End queue" title="Encerrar fila"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg></button>
+        <button id="refresh-queue" type="button" class="media-control" aria-label="Atualizar fila" data-en-label="Refresh queue" title="Atualizar fila"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.93 9h-2.02A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg></button>
       </div>
       <ol id="queue-items" aria-label="Vídeos da fila" data-en-label="Queued videos"></ol>
       <div id="queue-pages" class="row queue-pages" hidden>
         <button id="list-back" type="button" aria-label="Página anterior da fila" data-en-label="Previous queue page">‹</button>
-        <span id="list-range"></span>
+        <span id="list-range" class="queue-page-info"></span>
         <button id="list-forward" type="button" aria-label="Próxima página da fila" data-en-label="Next queue page">›</button>
       </div>
     </section>
@@ -59,8 +60,8 @@
         <label for="channel" data-en="Channel or uploads link">Canal ou link de uploads</label>
         <div class="row channel-input">
           <input id="channel" placeholder="@GameTrailers" autocomplete="off">
-          <button id="add-channel" type="button" data-en="Add">Adicionar</button>
-          <button id="use-tab" type="button" data-en="Use tab">Usar aba</button>
+          <button id="add-channel" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg><span data-en="Add">Adicionar</span></button>
+          <button id="use-tab" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 4v8h16V9zm0-2v1h16V7z"/></svg><span data-en="Use tab">Usar aba</span></button>
         </div>
         <select id="recent-channels" aria-label="Canais recentes" data-en-label="Recent channels" hidden></select>
         <ul id="selected-channels" aria-label="Canais selecionados" data-en-label="Selected channels" hidden></ul>
@@ -77,8 +78,8 @@
           <label id="custom-since" hidden><span data-en="Start date">Desde</span> <input id="since" type="date"></label>
           <label><span data-en="Sort by">Ordem</span>
             <select id="order">
-              <option value="newest" data-en="Newest first">Mais recentes primeiro</option>
-              <option value="oldest" data-en="Oldest first">Mais antigos primeiro</option>
+              <option value="newest" data-en="Newest first">Mais recentes</option>
+              <option value="oldest" data-en="Oldest first">Mais antigos</option>
               <option value="views" data-en="Most viewed">Mais assistidos</option>
             </select>
           </label>
