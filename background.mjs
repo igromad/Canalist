@@ -63,6 +63,8 @@ async function handle(message, sender) {
   const current = queue?.ids[queue.index];
 
   switch (message.type) {
+    case "shortcut-status":
+      return Boolean(current && current === message.id && queue.tabId === sender.tab?.id && queue.session === await sessionId());
     case "resume-status": {
       if (!current) return false;
       if (queue.session !== await sessionId()) return true;
@@ -180,6 +182,13 @@ async function handle(message, sender) {
       await openQueueItem(queue, { reuse: true, resume: true });
       await save();
       return;
+    case "shortcut-previous":
+      if (!current || message.id !== current || queue.tabId !== sender.tab?.id || queue.session !== await sessionId() || queue.index <= 0 || !queue.ids[queue.index - 1]) return;
+      delete queue.progress;
+      queue.index -= 1;
+      await openQueueItem(queue, { reuse: true });
+      await save();
+      return;
     case "jump":
       if (!queue || message.token !== queue.token || message.from !== queue.index ||
           !Number.isInteger(message.index) || !queue.ids[message.index]) return;
@@ -227,6 +236,9 @@ async function handle(message, sender) {
     case "skip":
       if (!current || message.token !== queue.token || message.id !== current) return;
       break;
+    case "shortcut-next":
+      if (!current || message.id !== current || queue.tabId !== sender.tab?.id || queue.session !== await sessionId()) return;
+      break;
     default:
       return;
   }
@@ -245,9 +257,22 @@ async function handle(message, sender) {
   }
 }
 
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !changes.library) return;
+  const oldQueue = changes.library.oldValue?.queue;
+  const queue = changes.library.newValue?.queue;
+  void sessionId().then((session) => {
+    for (const id of new Set([oldQueue?.tabId, queue?.tabId])) {
+      if (!Number.isInteger(id)) continue;
+      const current = queue?.tabId === id && queue.session === session ? queue.ids[queue.index] : null;
+      void chrome.tabs.sendMessage(id, { type: "shortcut-context", id: current ?? null }).catch(() => {});
+    }
+  });
+});
+
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   if (!message || sender.id !== chrome.runtime.id) return false;
-  if (message.type === "ended" || message.type === "progress") {
+  if (["ended", "progress", "shortcut-status", "shortcut-previous", "shortcut-next"].includes(message.type)) {
     if (!Number.isInteger(sender.tab?.id) || sender.frameId !== 0 ||
         sender.origin !== youtubeOrigin) return false;
   } else if (sender.url !== chrome.runtime.getURL("panel.html")) {

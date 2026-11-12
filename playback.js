@@ -1,10 +1,11 @@
 (() => {
   let playing = null;
   let lastReport = 0;
+  let shortcutId = null;
 
   async function sendPlaybackMessage(message) {
     try {
-      await chrome.runtime.sendMessage(message);
+      return await chrome.runtime.sendMessage(message);
     } catch {
       // A YouTube tab already open during an extension reload needs a page refresh.
     }
@@ -36,6 +37,10 @@
   }
 
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
+    if (sender.id === chrome.runtime.id && message?.type === "shortcut-context") {
+      shortcutId = message.id === videoId() ? message.id : null;
+      return false;
+    }
     if (sender.id !== chrome.runtime.id || !["playback-state", "playback-toggle"].includes(message?.type)) return false;
     const video = document.querySelector("#movie_player video.html5-main-video");
     if (videoId() !== message.id || !(video instanceof HTMLVideoElement) || !isMainVideo(video)) {
@@ -54,6 +59,23 @@
     video.play().then(() => respond({ paused: false }), () => respond({ error: "play-blocked" }));
     return true;
   });
+
+  async function updateShortcutContext() {
+    const id = videoId();
+    if (!id) { shortcutId = null; return; }
+    const response = await sendPlaybackMessage({ type: "shortcut-status", id });
+    if (videoId() === id) shortcutId = response?.ok && response.value ? id : null;
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || event.repeat || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey ||
+        !["p", "n"].includes(event.key.toLowerCase()) || shortcutId !== videoId() || !shortcutId ||
+        event.composedPath().some((element) => element instanceof HTMLElement &&
+          (element.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(element.tagName)))) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    void sendPlaybackMessage({ type: event.key.toLowerCase() === "p" ? "shortcut-previous" : "shortcut-next", id: shortcutId });
+  }, true);
 
   // Require a playback sample from the same media source and URL before trusting "ended".
   function observe(event) {
@@ -78,7 +100,10 @@
   document.addEventListener("yt-navigate-start", () => {
     report(true);
     playing = null;
+    shortcutId = null;
   }, true);
+  document.addEventListener("yt-navigate-finish", () => void updateShortcutContext(), true);
+  void updateShortcutContext();
   window.addEventListener("pagehide", () => report(true));
 
   document.addEventListener("ended", (event) => {

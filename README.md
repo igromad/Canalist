@@ -19,6 +19,8 @@ Canalist builds a queue from one or more YouTube channels and keeps track of wat
 
 The extension opens videos in YouTube. When a video finishes, Canalist records its ID and advances to the next item. Use the sort icon beside the playback controls to reorder a queue that is already running; the current video stays first, and watched videos are removed. The refresh button repeats the queue's saved channel, date, and sort settings, adds newly uploaded videos, removes watched ones, reports both counts, and leaves the current video playing without interruption. If you return to an interrupted queue, you can resume it or build a new one. Playback position is saved when the video is paused or playing.
 
+On the YouTube tab playing the current queue video, **P** plays the previous video and **N** marks the current video as watched and advances. These shortcuts do not apply while typing or watching other YouTube videos.
+
 ## Watched video history
 
 Watched IDs are stored locally in the browser profile and excluded from future queues. Import or export a TXT file to transfer history between profiles. The import accepts one video ID per line and common downloader formats, such as `youtube VIDEO_ID`.
