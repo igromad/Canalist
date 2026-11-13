@@ -120,7 +120,7 @@ async function handle(message, sender) {
     case "start": {
       const ids = [...new Set(message.ids)].filter((id) => isVideoId(id) && !watched.has(id));
       if (!ids.length) throw new Error("Nenhum vídeo pendente para reproduzir.");
-      const periods = new Set(["7days", "30days", "month", "all", "custom"]);
+      const periods = new Set(["24h", "7days", "30days", "month", "year", "all", "custom"]);
       const sorts = new Set(["newest", "oldest", "views"]);
       state.queue = {
         ids,

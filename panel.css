@@ -103,12 +103,16 @@ label { display: block; font-weight: 550; }
 .filters input, .filters select { display: block; width: 100%; margin-top: .3rem; }
 .actions { flex-wrap: wrap; margin-top: .65rem; }
 .catalog-actions > button { flex: 1 1 auto; min-height: 2.5rem; }
+.catalog-actions:has(#refresh-queue:not([hidden])) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+.catalog-actions > button { width: 100%; min-width: 0; }
+.catalog-actions #refresh-queue { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; }
+.catalog-actions #refresh-queue svg { width: 1.1rem; height: 1.1rem; fill: currentColor; }
 .queue-heading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: .3rem .7rem; }
 .queue-heading h2 { margin: 0; }
 #queue-status { color: var(--muted); font-size: .86rem; }
 .transport {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: .35rem;
   margin: .65rem 0;
 }

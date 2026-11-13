@@ -131,7 +131,7 @@ export async function fetchViewCounts(ids, key, signal) {
 }
 
 export async function fetchUploads(channel, key, { since, signal, onProgress } = {}) {
-  const cutoff = since ? new Date(`${since}T00:00:00`).getTime() : -Infinity;
+  const cutoff = since ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(since) ? `${since}T00:00:00` : since).getTime() : -Infinity;
   if (Number.isNaN(cutoff)) throw new Error("Escolha uma data de início válida.");
   let playlistId = channel.uploads;
   let title = playlistId;

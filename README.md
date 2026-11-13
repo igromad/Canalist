@@ -13,11 +13,11 @@ Canalist builds a queue from one or more YouTube channels and keeps track of wat
 ## Create a queue
 
 1. Enter a YouTube channel handle, channel URL, or uploads playlist URL. You can add multiple channels to the same queue.
-2. Choose a **Published** period: the last 7 days (default), the last 30 days, this month, all time, or a custom start date.
+2. Choose a **Published** period: the last 24 hours, the last 7 days (default), the last 30 days, this month, the last year, all time, or a custom start date.
 3. Choose a sort order and click **Create queue**. Available orders include newest, oldest, and most viewed.
 4. Select a video from the list or use the playback controls. The next control marks the current video as watched before advancing.
 
-The extension opens videos in YouTube. When a video finishes, Canalist records its ID and advances to the next item. Use the sort icon beside the playback controls to reorder a queue that is already running; the current video stays first, and watched videos are removed. The refresh button repeats the queue's saved channel, date, and sort settings, adds newly uploaded videos, removes watched ones, reports both counts, and leaves the current video playing without interruption. If you return to an interrupted queue, you can resume it or build a new one. Playback position is saved when the video is paused or playing.
+The extension opens videos in YouTube. When a video finishes, Canalist records its ID and advances to the next item. Use the sort icon beside the playback controls to reorder a queue that is already running; the current video stays first, and watched videos are removed. The refresh button in **Build a queue** repeats the queue's saved channel, date, and sort settings, adds newly uploaded videos, removes watched ones, reports both counts, and leaves the current video playing without interruption. If you return to an interrupted queue, you can resume it or build a new one. Playback position is saved when the video is paused or playing.
 
 On the YouTube tab playing the current queue video, **P** plays the previous video and **N** marks the current video as watched and advances. These shortcuts do not apply while typing or watching other YouTube videos.
 
@@ -30,7 +30,7 @@ By default, Canalist tracks videos watched in its queue. An optional setting als
 ## Settings
 
 - **Language:** English or Brazilian Portuguese.
-- **Published period:** choose the last 7 days (default), the last 30 days, this month, all time, or a custom start date.
+- **Published period:** choose the last 24 hours, the last 7 days (default), the last 30 days, this month, the last year, all time, or a custom start date.
 - **Sort order:** newest, oldest, or most viewed.
 - **Track videos outside the queue:** records completed videos on standard YouTube watch pages.
 

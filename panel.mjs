@@ -40,6 +40,11 @@ function tr(portuguese, english) {
   return language.value === "en" ? english : portuguese;
 }
 
+function displayChannel(value) {
+  const trimmed = value.trim();
+  return parseChannel(trimmed)?.forHandle ?? trimmed;
+}
+
 function localDateValue(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -49,6 +54,12 @@ function localDateValue(date) {
 
 function publicationCutoff(selectedPeriod = period.value, customDate = since.value) {
   if (selectedPeriod === "all") return "";
+  if (selectedPeriod === "24h") return new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  if (selectedPeriod === "year") {
+    const start = new Date();
+    start.setFullYear(start.getFullYear() - 1);
+    return start.toISOString();
+  }
   if (selectedPeriod === "custom") {
     if (!customDate) throw new Error("Escolha uma data de início válida.");
     return customDate;
@@ -166,12 +177,14 @@ function renderChannels() {
 }
 
 function addChannel(input, title = input) {
+  if (title === input) title = displayChannel(input);
+  input = displayChannel(input);
   if (!parseChannel(input)) {
     feedback("search-status", tr("Digite um @canal ou cole um link de canal ou de uploads.",
       "Enter an @handle or paste a channel or uploads link."), true);
     return;
   }
-  const draft = channel.value.trim();
+  const draft = displayChannel(channel.value);
   if (draft !== input && parseChannel(draft) && !channels.some((entry) => entry.input === draft)) {
     channels.push({ input: draft, title: draft });
   }
@@ -421,6 +434,8 @@ function renderQueue() {
   }
   byId("resume-choice").disabled = queueBusy;
   byId("queue-card").hidden = !queue;
+  byId("refresh-queue").hidden = !queue;
+  byId("refresh-queue").disabled = queueBusy;
   if (!queue) {
     queueCursor = "";
     return;
@@ -439,7 +454,6 @@ function renderQueue() {
   byId("previous").disabled = queueBusy || queue.index === 0;
   for (const id of ["resume", "skip"]) byId(id).disabled = queueBusy || !current;
   byId("stop").disabled = queueBusy;
-  byId("refresh-queue").disabled = queueBusy;
   byId("queue-sort-toggle").disabled = queueBusy || !current;
   for (const option of queueSortMenu.querySelectorAll("button")) {
     option.disabled = queueBusy;
@@ -523,7 +537,7 @@ function clearSearch() {
 async function useTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.url || !parseChannel(tab.url)) return false;
-  channel.value = tab.url;
+  channel.value = displayChannel(tab.url);
   clearSearch();
   return true;
 }
@@ -583,7 +597,7 @@ byId("catalog-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (activeSearch) return;
   const entries = [...channels];
-  const draft = channel.value.trim();
+  const draft = displayChannel(channel.value);
   if (draft && !entries.some(({ input }) => input === draft)) entries.push({ input: draft });
   if (!entries.length || entries.some(({ input }) => !parseChannel(input))) {
     feedback("search-status", tr("Use um @handle, ID de canal ou link de uploads UU…",
@@ -669,7 +683,13 @@ byId("catalog-form").addEventListener("submit", async (event) => {
   }
 });
 
-channel.addEventListener("input", clearSearch);
+channel.addEventListener("input", (event) => {
+  if (event.inputType === "insertFromPaste" || event.inputType === "insertFromDrop") {
+    channel.value = displayChannel(channel.value);
+  }
+  clearSearch();
+});
+channel.addEventListener("blur", () => { channel.value = displayChannel(channel.value); });
 byId("add-channel").addEventListener("click", () => addChannel(channel.value.trim()));
 recentChannels.addEventListener("change", () => {
   const option = recentChannels.selectedOptions[0];
@@ -866,7 +886,7 @@ try {
   renderRecent(entries);
   const last = saved.lastChannels ?? entries.slice(0, 1);
   if (last.length > 1) channels = last;
-  else if (!channel.value && last.length) channel.value = last[0].input;
+  else if (!channel.value && last.length) channel.value = displayChannel(last[0].input);
   if (!channel.value && !channels.length) await useTab();
   renderChannels();
   render();

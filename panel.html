@@ -43,7 +43,6 @@
         <button id="resume" class="primary media-control" type="button" aria-label="Abrir vídeo" data-en-label="Open video" title="Abrir vídeo"><svg id="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
         <button id="skip" type="button" class="media-control" aria-label="Próximo e marcar como assistido" data-en-label="Next and mark as watched" title="Próximo e marcar como assistido"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14l10-7zM18 5h2v14h-2z"/></svg></button>
         <button id="stop" type="button" class="media-control" aria-label="Encerrar fila" data-en-label="End queue" title="Encerrar fila"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg></button>
-        <button id="refresh-queue" type="button" class="media-control" aria-label="Atualizar fila" data-en-label="Refresh queue" title="Atualizar fila"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.93 9h-2.02A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg></button>
       </div>
       <ol id="queue-items" aria-label="Vídeos da fila" data-en-label="Queued videos"></ol>
       <div id="queue-pages" class="row queue-pages" hidden>
@@ -68,9 +67,11 @@
         <div class="row filters">
           <label><span data-en="Published">Publicado</span>
             <select id="period" aria-label="Período de publicação" data-en-label="Publication period">
+              <option value="24h" data-en="Last 24 hours">Últimas 24 horas</option>
               <option value="7days" data-en="Last 7 days" selected>Últimos 7 dias</option>
               <option value="30days" data-en="Last 30 days">Últimos 30 dias</option>
               <option value="month" data-en="This month">Este mês</option>
+              <option value="year" data-en="Last year">Último ano</option>
               <option value="all" data-en="All time">Sempre</option>
               <option value="custom" data-en="Custom period">Período personalizado</option>
             </select>
@@ -86,6 +87,7 @@
         </div>
         <div class="row actions catalog-actions">
           <button id="search" class="primary" type="submit" data-en="Create queue">Criar fila</button>
+          <button id="refresh-queue" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.93 9h-2.02A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg><span data-en="Refresh queue">Atualizar fila</span></button>
         </div>
       </form>
       <p id="search-status" class="feedback" role="status"></p>
